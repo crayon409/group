@@ -10,7 +10,7 @@ import {
     SettingOutlined,
     ShopOutlined,
 } from '@ant-design/icons';
-import { Affix, Layout, Menu, Space } from 'antd';
+import { Affix, Col, Layout, Menu, Space } from 'antd';
 import config from '../config/app';
 import { Outlet } from 'react-router-dom';
 import { Link } from 'react-router'
@@ -76,29 +76,28 @@ const LayoutFrame = () => {
                 />
             </Sider>
             <Layout style={{
-                width: '100%',
+                backgroundColor: '#f00',
             }}>
                 <Header
                     style={{
                         textAlign: 'right',
-                        padding: 0,
                         backgroundColor: '#fff',
                         width: '100%',
                         height: '60px',
+                        padding: '0 20px',
                     }}
                 >
-                    <Space style={{
-                        paddingRight: '20px',
-                    }}>
+                    <Space >
                         <UserProfile />
                     </Space>
                 </Header>
                 <Content
                     style={{
-                        display: 'flex',
-                        // margin: '24px 16px 0',
-                        overflow: 'initial',
+                        padding: '18px',
                         backgroundColor: '#fff',
+                        overflow: 'auto',
+                        width: 'calc(100vw - 200px)', // 减去Sider的宽度
+                        height: 'calc(100vh - 140px)', // 减去Header和Footer的高度
                     }}
                 >
                     <Outlet />

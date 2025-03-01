@@ -15,8 +15,6 @@ const userAvatar = () => (
                 }}
                 icon={<AntDesignOutlined />}
             />
-
-            Root
         </Space>
     </Space>
 );

@@ -21,6 +21,9 @@ const items = [
 ];
 const UserProfile = () => (
     <Dropdown
+        overlayStyle={{
+            top: '50px',
+        }}
         menu={{
             items,
         }}

@@ -4,7 +4,7 @@ import Login from './login';
 import Layout from './layout';
 import Home from './home';
 import User from './user';
-import Goods from './goods';
+import Goods from '../components/goods_form';
 import Category from './category';
 import Order from './order';
 
