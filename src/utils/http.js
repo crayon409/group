@@ -53,3 +53,5 @@ http.interceptors.response.use(
 );
 
 export default http;
+
+export const params = { page: 1, pageSize: 10 };

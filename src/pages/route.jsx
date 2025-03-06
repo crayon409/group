@@ -4,19 +4,19 @@ import Login from './login';
 import Layout from './layout';
 import Home from './home';
 import User from './user';
-import Goods from '../components/goods_form';
+import Goods from './goods';
 import Category from './category';
 import Order from './order';
 
 const RouteLayout = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(true);
 
     useEffect(() => {
         // 这里可以添加检查用户是否已登录的逻辑
         // 例如从localStorage中读取token并验证
         const token = localStorage.getItem('token');
-        if (token) {
-            setIsLoggedIn(true);
+        if (!token) {
+            setIsLoggedIn(false);
         }
     }, []);
 

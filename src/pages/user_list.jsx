@@ -107,6 +107,7 @@ const UserList = () => {
                             setPageSize(pageSize);
                         },
                     }}
+                    style={{ width: '100%' }}
                 />
             </Flex>
         </Form>

@@ -1,23 +1,116 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Col, DatePicker, Drawer, Form, Input, Row, Select, Space } from 'antd';
+import { Button, Col, DatePicker, Drawer, Form, Input, message, Row, Select, Space, TreeSelect } from 'antd';
 const { Option } = Select;
-const GoodsForm = () => {
-    const [open, setOpen] = useState(false);
-    const showDrawer = () => {
+import Upload from './upload';
+import Category from './category';
+import http from '../utils/http';
+import config from '../config/app';
+
+
+const GoodsForm = ({ action, setAction, refresh, setRefresh, values, setValues, open, setOpen }) => {
+    const [form] = Form.useForm();
+    const addGoods = () => {
+        setAction('add');
         setOpen(true);
+        setValues({})
     };
+    const titleDesc = (action == 'add' ? '新增' : '编辑') + '商品';
+
+    const [submitable, setSubmittable] = useState(false);
+    const [fileList, setFileList] = useState([]);
+    const values2 = Form.useWatch([], form);
+
+    useEffect(() => {
+        form.validateFields({
+            validateOnly: true,
+        })
+            .then(() => setSubmittable(true))
+            .catch((err) => {
+                console.log(err);
+                setSubmittable(false)
+            });
+    }, [form, values2])
+
+    useEffect(() => {
+        console.log('values', values)
+        if (action == 'add') {
+            form.resetFields()
+            setFileList([])
+        } else {
+            form.setFieldsValue(values)
+            setTimeout(() => {
+                setFileList(values?.picture ? values.picture.map((item, idx) => ({
+                    uid: idx + '',
+                    name: item,
+                    status: 'done',
+                    url: config.api.fileUrl + item,
+                })) : [])
+            }, 500);
+        }
+    }, [action])
+
+    useEffect(() => {
+        console.log('fileList', fileList)
+    }, [fileList])
+
+    const submitGoods = () => {
+        if (action == 'add') {
+            http.post('/Goods/add', form.getFieldsValue())
+                .then(res => {
+                    if (res.code != 0) {
+                        message.error(res.msg)
+                        return
+                    }
+                    message.success('添加成功')
+                    setRefresh(refresh + 1)
+                    form.resetFields()
+                    setValues({})
+                    setOpen(false)
+                })
+                .catch(res => {
+                    message.error('网络错误')
+                })
+        } else {
+            http.post('/Goods/edit', form.getFieldsValue())
+                .then(res => {
+                    if (res.code != 0) {
+                        message.error(res.msg)
+                        return
+                    }
+                    message.success('修改成功')
+                    setRefresh(refresh + 1)
+                    setOpen(false)
+                })
+                .catch(res => {
+                    message.error('网络错误')
+                })
+        }
+        console.log('submit', form.getFieldsValue());
+    };
+
     const onClose = () => {
         setOpen(false);
     };
+
+    const uploadCallback = (newValue) => {
+        console.log('newValue', newValue)
+        form.setFieldsValue({
+            picture: newValue.map(element => element.response?.data?.file_name
+                ? element.response?.data?.file_name
+                : element.url
+            )
+        })
+    }
+
     return (
         <>
-            <Button type="primary" onClick={showDrawer} icon={<PlusOutlined />}>
-                New account
+            <Button type="primary" onClick={addGoods} icon={<PlusOutlined />}>
+                添加商品
             </Button>
             <Drawer
-                title="Create a new account"
-                width={720}
+                title={titleDesc}
+                width={900}
                 onClose={onClose}
                 open={open}
                 styles={{
@@ -27,47 +120,59 @@ const GoodsForm = () => {
                 }}
                 extra={
                     <Space>
-                        <Button onClick={onClose}>Cancel</Button>
-                        <Button onClick={onClose} type="primary">
-                            Submit
+                        <Button onClick={onClose}>取消</Button>
+                        <Button disabled={!submitable} onClick={submitGoods} type="primary">
+                            提交
                         </Button>
                     </Space>
                 }
             >
-                <Form layout="vertical" hideRequiredMark>
+                <Form
+                    layout="vertical"
+                    form={form}
+                    scrollToFirstError
+                    validateMessages={{
+                        required: '${label}为必填项',
+                    }}
+                >
+                    <Form.Item name='id' hidden>
+                        <Input hidden />
+                    </Form.Item>
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
                                 name="name"
-                                label="Name"
+                                label="名称"
                                 rules={[
                                     {
                                         required: true,
-                                        message: 'Please enter user name',
+                                        message: '请输入名称',
                                     },
                                 ]}
                             >
-                                <Input placeholder="Please enter user name" />
+                                <Input placeholder="请输入名称" />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                name="url"
-                                label="Url"
+                                name="catId"
+                                label="分类"
                                 rules={[
                                     {
                                         required: true,
-                                        message: 'Please enter url',
+                                        message: '请选择分类',
                                     },
                                 ]}
                             >
-                                <Input
-                                    style={{
-                                        width: '100%',
+                                <Category
+                                    actionCallback={(val) => {
+                                        form.setFieldsValue({
+                                            ...form.getFieldsValue(),
+                                            catId: val
+                                        })
+                                        setValues({ ...values, catId: val })
                                     }}
-                                    addonBefore="http://"
-                                    addonAfter=".com"
-                                    placeholder="Please enter url"
+                                    catId={values?.catId}
                                 />
                             </Form.Item>
                         </Col>
@@ -75,58 +180,36 @@ const GoodsForm = () => {
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
-                                name="owner"
-                                label="Owner"
+                                name="originPrice"
+                                label="原价"
                                 rules={[
                                     {
                                         required: true,
-                                        message: 'Please select an owner',
+                                        message: '请输入原价',
                                     },
                                 ]}
                             >
-                                <Select placeholder="Please select an owner">
-                                    <Option value="xiao">Xiaoxiao Fu</Option>
-                                    <Option value="mao">Maomao Zhou</Option>
-                                </Select>
+                                <Input placeholder='请输入原价' />
                             </Form.Item>
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                name="type"
-                                label="Type"
+                                name="shopPrice"
+                                label="售价"
                                 rules={[
                                     {
                                         required: true,
-                                        message: 'Please choose the type',
+                                        message: '请输入售价',
                                     },
                                 ]}
                             >
-                                <Select placeholder="Please choose the type">
-                                    <Option value="private">Private</Option>
-                                    <Option value="public">Public</Option>
-                                </Select>
+                                <Input placeholder='请输入售价' />
                             </Form.Item>
                         </Col>
                     </Row>
                     <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="approver"
-                                label="Approver"
-                                rules={[
-                                    {
-                                        required: true,
-                                        message: 'Please choose the approver',
-                                    },
-                                ]}
-                            >
-                                <Select placeholder="Please choose the approver">
-                                    <Option value="jack">Jack Ma</Option>
-                                    <Option value="tom">Tom Liu</Option>
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
+
+                        {/* <Col span={12}>
                             <Form.Item
                                 name="dateTime"
                                 label="DateTime"
@@ -144,21 +227,42 @@ const GoodsForm = () => {
                                     getPopupContainer={(trigger) => trigger.parentElement}
                                 />
                             </Form.Item>
+                        </Col> */}
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={24}>
+                            <Form.Item
+                                name="picture"
+                                label="商品图片"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: '请上传商品图片',
+                                    },
+                                ]}
+                            >
+                                <Upload
+                                    maxLen='9'
+                                    values={fileList}
+                                    setValues={setFileList}
+                                    actionCallback={uploadCallback}
+                                />
+                            </Form.Item>
                         </Col>
                     </Row>
                     <Row gutter={16}>
                         <Col span={24}>
                             <Form.Item
-                                name="description"
-                                label="Description"
+                                name="desc"
+                                label="简介"
                                 rules={[
                                     {
                                         required: true,
-                                        message: 'please enter url description',
+                                        message: '请输入商品简介',
                                     },
                                 ]}
                             >
-                                <Input.TextArea rows={4} placeholder="please enter url description" />
+                                <Input.TextArea rows={4} placeholder="请输入商品简介" />
                             </Form.Item>
                         </Col>
                     </Row>

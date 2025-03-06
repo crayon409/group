@@ -96,8 +96,8 @@ const LayoutFrame = () => {
                         padding: '18px',
                         backgroundColor: '#fff',
                         overflow: 'auto',
-                        width: 'calc(100vw - 200px)', // 减去Sider的宽度
-                        height: 'calc(100vh - 140px)', // 减去Header和Footer的高度
+                        width: 'calc(100vw - 200px)',
+                        height: 'calc(100vh - 140px)',
                     }}
                 >
                     <Outlet />

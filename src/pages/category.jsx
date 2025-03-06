@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Flex, Space, Switch, Table } from 'antd';
+import CategoryList from './category_list';
 
 const Category = () => {
     return (
-        <div>
-            Category
-        </div>
-    )
-}
-
+        <>
+            <CategoryList />
+        </>
+    );
+};
 export default Category;
